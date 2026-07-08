@@ -3,13 +3,15 @@ package com.example.roombooking.infrastructure;
 import com.example.roombooking.application.BookingRepository;
 import com.example.roombooking.domain.Booking;
 import com.example.roombooking.domain.Room.RoomId;
-import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-@Repository
+/**
+ * Används numera enbart av acceptanstesterna för affärsreglerna kring bokning
+ * (bokning.feature) - inte Spring-hanterad. Produktionskonfigurationen använder
+ * {@link JpaBookingRepository} mot Postgres, se persistens.feature.
+ */
 public class InMemoryBookingRepository implements BookingRepository {
 
     private final List<Booking> bookings = new CopyOnWriteArrayList<>();

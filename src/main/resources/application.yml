@@ -3,6 +3,14 @@ spring:
     name: roombooking
   thymeleaf:
     cache: false
+  datasource:
+    url: jdbc:postgresql://localhost:5432/roombooking
+    username: roombooking
+    password: roombooking
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
 
 server:
   port: 8080
