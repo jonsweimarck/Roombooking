@@ -21,7 +21,7 @@ public class JpaRoomRepository implements RoomRepository {
         return jpaRepository.findById(id.value()).map(JpaRoomRepository::toDomain);
     }
 
-    /** Används av acceptanstesterna för att så ett rum inför persistens-scenarier. */
+    @Override
     public void save(Room room) {
         jpaRepository.save(toEntity(room));
     }

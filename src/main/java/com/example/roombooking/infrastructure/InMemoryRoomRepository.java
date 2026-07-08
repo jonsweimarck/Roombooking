@@ -19,15 +19,16 @@ public class InMemoryRoomRepository implements RoomRepository {
 
     public InMemoryRoomRepository() {
         // Startdata så acceptanstesterna har något att boka mot.
-        addRoom(new Room(new RoomId("R204")));
-    }
-
-    public void addRoom(Room room) {
-        rooms.put(room.id().value(), room);
+        save(new Room(new RoomId("R204")));
     }
 
     @Override
     public Optional<Room> findById(RoomId id) {
         return Optional.ofNullable(rooms.get(id.value()));
+    }
+
+    @Override
+    public void save(Room room) {
+        rooms.put(room.id().value(), room);
     }
 }

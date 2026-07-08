@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="sv" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Administrera rum</title>
+    <script src="https://unpkg.com/htmx.org@2.0.2"></script>
+    <style>
+        body { font-family: sans-serif; max-width: 32rem; margin: 3rem auto; }
+        label { display: block; margin-top: 0.75rem; }
+        input { width: 100%; padding: 0.4rem; box-sizing: border-box; }
+        button { margin-top: 1rem; padding: 0.6rem 1rem; }
+        #result { margin-top: 1.5rem; padding: 0.75rem; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Administrera rum</h1>
+
+    <form hx-post="/admin/rum" hx-target="#result" hx-swap="innerHTML">
+        <label>Rum-id
+            <input type="text" name="roomId" required>
+        </label>
+        <button type="submit">Lägg till rum</button>
+    </form>
+
+    <div id="result"></div>
+
+    <div th:fragment="result">
+        <div style="background:#e6f4ea">
+            <p th:text="${message}"></p>
+        </div>
+    </div>
+</body>
+</html>

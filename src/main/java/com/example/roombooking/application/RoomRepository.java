@@ -8,4 +8,6 @@ import java.util.Optional;
 public interface RoomRepository {
 
     Optional<Room> findById(RoomId id);
+
+    void save(Room room);
 }
