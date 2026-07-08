@@ -9,5 +9,5 @@ public interface BookingRepository {
 
     List<Booking> findByRoom(RoomId roomId);
 
-    Booking save(Booking booking);
+    void save(Booking booking);
 }

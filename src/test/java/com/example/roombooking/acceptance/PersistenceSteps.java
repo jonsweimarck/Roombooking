@@ -47,14 +47,14 @@ public class PersistenceSteps {
 
     @Givet("att ett rum {string} har en bokning")
     public void attEttRumHarEnBokning(String rumId) {
-        roomRepository.save(new Room(new RoomId(rumId), rumId));
+        roomRepository.save(new Room(new RoomId(rumId)));
         var timeSlot = new TimeSlot(DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(10, 0));
         bookingService.book(new RoomId(rumId), timeSlot, "Cecilia");
     }
 
     @Givet("att rummet {string} finns")
     public void attRummetFinns(String rumId) {
-        roomRepository.save(new Room(new RoomId(rumId), rumId));
+        roomRepository.save(new Room(new RoomId(rumId)));
     }
 
     @När("applikationen startas om")

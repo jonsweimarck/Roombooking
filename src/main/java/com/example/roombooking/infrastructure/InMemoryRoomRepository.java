@@ -19,7 +19,7 @@ public class InMemoryRoomRepository implements RoomRepository {
 
     public InMemoryRoomRepository() {
         // Startdata så acceptanstesterna har något att boka mot.
-        addRoom(new Room(new RoomId("R204"), "R204"));
+        addRoom(new Room(new RoomId("R204")));
     }
 
     public void addRoom(Room room) {

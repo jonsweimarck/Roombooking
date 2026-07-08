@@ -1,6 +1,6 @@
 package com.example.roombooking.domain;
 
-public record Room(RoomId id, String name) {
+public record Room(RoomId id) {
 
     public record RoomId(String value) {
         public RoomId {

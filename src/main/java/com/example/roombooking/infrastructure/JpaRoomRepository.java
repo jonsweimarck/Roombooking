@@ -27,10 +27,10 @@ public class JpaRoomRepository implements RoomRepository {
     }
 
     private static RoomEntity toEntity(Room room) {
-        return new RoomEntity(room.id().value(), room.name());
+        return new RoomEntity(room.id().value());
     }
 
     private static Room toDomain(RoomEntity entity) {
-        return new Room(new RoomId(entity.getId()), entity.getName());
+        return new Room(new RoomId(entity.getId()));
     }
 }

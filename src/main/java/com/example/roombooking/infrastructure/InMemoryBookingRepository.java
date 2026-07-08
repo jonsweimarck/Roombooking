@@ -24,9 +24,8 @@ public class InMemoryBookingRepository implements BookingRepository {
     }
 
     @Override
-    public Booking save(Booking booking) {
+    public void save(Booking booking) {
         bookings.add(booking);
-        return booking;
     }
 
     /** Används av acceptanstesterna för att nollställa tillstånd mellan scenarier. */

@@ -9,21 +9,14 @@ public class RoomEntity {
     @Id
     private String id;
 
-    private String name;
-
     protected RoomEntity() {
     }
 
-    RoomEntity(String id, String name) {
+    RoomEntity(String id) {
         this.id = id;
-        this.name = name;
     }
 
     String getId() {
         return id;
-    }
-
-    String getName() {
-        return name;
     }
 }

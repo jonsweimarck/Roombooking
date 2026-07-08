@@ -25,9 +25,8 @@ public class JpaBookingRepository implements BookingRepository {
     }
 
     @Override
-    public Booking save(Booking booking) {
+    public void save(Booking booking) {
         jpaRepository.save(toEntity(booking));
-        return booking;
     }
 
     /** Används av acceptanstesterna för att nollställa tillstånd mellan scenarier. */
