@@ -3,17 +3,16 @@ package com.example.roombooking.infrastructure;
 import com.example.roombooking.application.RoomRepository;
 import com.example.roombooking.domain.Room;
 import com.example.roombooking.domain.Room.RoomId;
-import org.springframework.stereotype.Repository;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Tillfällig implementation. Ersätts av en Postgres-baserad implementation
- * (testdriven med Testcontainers) i nästa iteration - se README.
+ * Används numera enbart av acceptanstesterna för affärsreglerna kring bokning
+ * (bokning.feature) - inte Spring-hanterad. Produktionskonfigurationen använder
+ * {@link JpaRoomRepository} mot Postgres, se rum-persistens.feature.
  */
-@Repository
 public class InMemoryRoomRepository implements RoomRepository {
 
     private final Map<String, Room> rooms = new ConcurrentHashMap<>();

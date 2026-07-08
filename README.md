@@ -15,11 +15,10 @@ infrastructure/  Adaptrar som implementerar portarna (in-memory + JPA/Postgres)
 web/             Tunt HTTP-lager (Controller + Thymeleaf/htmx)
 ```
 
-`BookingRepository` har nu en Postgres-baserad implementation
-(`JpaBookingRepository`), testdriven mot en riktig databas med Testcontainers
-- inte mockad (se `persistens.feature`). `RoomRepository` är fortfarande
-in-memory; den adapteras när ett scenario kräver att rum överlever en
-omstart.
+Både `BookingRepository` och `RoomRepository` har nu Postgres-baserade
+implementationer (`JpaBookingRepository`/`JpaRoomRepository`), testdrivna mot
+en riktig databas med Testcontainers - inte mockade (se `persistens.feature`
+och `rum-persistens.feature`).
 
 ## Arbetsprocess
 
@@ -76,8 +75,8 @@ för `jib:dockerBuild` om du bara vill bygga lokalt utan push.)
 ## Nästa steg (öppna för nästa session)
 
 - [x] Postgres-adapter för `BookingRepository`, testad med Testcontainers
-- [x] Ersätt in-memory-adaptern för bokningar i produktionskonfigurationen
+- [x] Postgres-adapter för `RoomRepository`, testad med Testcontainers
+- [x] Ersätt in-memory-adaptrarna i produktionskonfigurationen
 - [ ] Fler scenarier: öppettider, bokning bakåt i tiden, avbokning
-- [ ] Postgres-adapter för `RoomRepository`, testad med Testcontainers
 - [ ] Konkret deploy-steg i CI mot första molnplattformen (förslag: Fly.io - enklast att komma igång med)
 - [ ] Andra molnplattformen för att verifiera portabiliteten (t.ex. Kubernetes-manifest)
