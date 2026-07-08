@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="sv" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Boka studierum</title>
+    <script src="https://unpkg.com/htmx.org@2.0.2"></script>
+    <style>
+        body { font-family: sans-serif; max-width: 32rem; margin: 3rem auto; }
+        label { display: block; margin-top: 0.75rem; }
+        input, select { width: 100%; padding: 0.4rem; box-sizing: border-box; }
+        button { margin-top: 1rem; padding: 0.6rem 1rem; }
+        #result { margin-top: 1.5rem; padding: 0.75rem; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Boka studierum</h1>
+
+    <form hx-post="/bookings" hx-target="#result" hx-swap="innerHTML">
+        <label>Rum
+            <input type="text" name="roomId" value="R204" required>
+        </label>
+        <label>Veckodag
+            <select name="day">
+                <option value="MONDAY">Måndag</option>
+                <option value="TUESDAY">Tisdag</option>
+                <option value="WEDNESDAY">Onsdag</option>
+                <option value="THURSDAY">Torsdag</option>
+                <option value="FRIDAY" selected>Fredag</option>
+            </select>
+        </label>
+        <label>Starttid
+            <input type="time" name="start" value="10:00" required>
+        </label>
+        <label>Sluttid
+            <input type="time" name="end" value="11:00" required>
+        </label>
+        <label>Namn
+            <input type="text" name="bookedBy" required>
+        </label>
+        <button type="submit">Boka</button>
+    </form>
+
+    <div id="result"></div>
+
+    <div th:fragment="result">
+        <div th:style="${success} ? 'background:#e6f4ea' : 'background:#fce8e6'">
+            <p th:text="${message}"></p>
+        </div>
+    </div>
+</body>
+</html>

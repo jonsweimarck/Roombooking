@@ -1,0 +1,70 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sätt upp Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # Kör enhets-, integrations- och acceptanstester (Cucumber körs via junit-platform-engine).
+      - name: Bygg och testa
+        run: mvn -B verify
+
+      - name: Publicera testrapporter
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: target/surefire-reports
+
+  publish-image:
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sätt upp Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Logga in på GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      # Jib bygger och pushar en OCI-image direkt från Maven - ingen Dockerfile behövs.
+      # Samma image kan sedan köras på valfri molnplattform som stödjer containrar.
+      - name: Bygg och publicera OCI-image
+        env:
+          IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: mvn -B compile jib:build
+
+  # Deploy-steget är plattformsspecifikt och lämnas som en tydlig utbyggnadspunkt.
+  # Nästa lärsteg: byt ut detta jobb mot t.ex. flyctl, render-cli eller kubectl
+  # beroende på vilken molnplattform vi testar för det aktuella delprojektet.
+  deploy:
+    needs: publish-image
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Platshållare för deployment
+        run: echo "Deploy-steg läggs till per målplattform (Fly.io, Render, Kubernetes, ...)"

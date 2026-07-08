@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: roombooking
+  thymeleaf:
+    cache: false
+
+server:
+  port: 8080
