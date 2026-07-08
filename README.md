@@ -48,11 +48,19 @@ finnas i mappstrukturen.
 
 ## Köra lokalt
 
+Produktionskonfigurationen kräver en riktig Postgres (se `application.yml`).
+Starta den med docker-compose innan appen startas:
+
 ```
+docker compose up -d
 mvn spring-boot:run
 ```
 
 Öppna http://localhost:8080 - formuläret postar via htmx utan sidladdning.
+
+Databasen är tom från början - det finns ännu ingen användarväg för att
+skapa rum, så en bokning mot t.ex. "R204" avslås med "Rummet finns inte"
+tills ett rum finns i tabellen `room_entity`.
 
 ## Köra tester
 
