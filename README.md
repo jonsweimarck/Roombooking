@@ -58,9 +58,10 @@ mvn spring-boot:run
 
 Öppna http://localhost:8080 - formuläret postar via htmx utan sidladdning.
 
-Databasen är tom från början - det finns ännu ingen användarväg för att
-skapa rum, så en bokning mot t.ex. "R204" avslås med "Rummet finns inte"
-tills ett rum finns i tabellen `room_entity`.
+Databasen är tom från början, så en bokning mot t.ex. "R204" avslås med
+"Rummet finns inte" tills rummet finns i tabellen `room_entity`. Lägg till
+det via admin-sidan på http://localhost:8080/admin/rum - notera att den
+sidan just nu är helt öppen och saknar autentisering.
 
 ## Köra tester
 
@@ -86,7 +87,7 @@ för `jib:dockerBuild` om du bara vill bygga lokalt utan push.)
 - [x] Postgres-adapter för `RoomRepository`, testad med Testcontainers
 - [x] Ersätt in-memory-adaptrarna i produktionskonfigurationen
 - [x] Admin-sida för att lägga till rum (`administrera-rum.feature`, `RoomAdminService`, `/admin/rum`)
-- [ ] Fler scenarier: öppettider, bokning bakåt i tiden, avbokning
+- [x] Fler scenarier: bokning bakåt i tiden, avbokning (`avbokning.feature`) - öppettider behövs inte, rum är bokningsbara dygnet om
 - [ ] Autentisering för admin-sidan - `/admin/rum` är just nu helt öppen, vem som helst kan lägga till rum
 - [ ] Konkret deploy-steg i CI mot första molnplattformen (förslag: Fly.io - enklast att komma igång med)
 - [ ] Andra molnplattformen för att verifiera portabiliteten (t.ex. Kubernetes-manifest)
