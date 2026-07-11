@@ -45,6 +45,20 @@ arkitektur och arbetsprocess.
 - Rum har inga öppettider - de är bokningsbara dygnet om. Beslutat
   medvetet, inget scenario för det ska läggas till.
 
+## Säkerhet
+
+- **`/admin/**` kräver HTTP Basic-inloggning** via `SecurityConfig` (en
+  vanlig `SecurityFilterChain`-böna) - en admin-användare, lösenord från
+  `roombooking.admin.password`/miljövariabeln `ROOMBOOKING_ADMIN_PASSWORD`.
+  Valt medvetet framför en egen inloggningssida: att senare byta
+  `httpBasic()` mot `oauth2Login()`/`oauth2ResourceServer()` blir då en
+  omkonfigurering av samma filterkedja, inte en omskrivning - så länge vi
+  håller oss till Spring Securitys standardmönster istället för att
+  handrulla egna filter.
+- CSRF är avstängt globalt - htmx-formulären skickar ingen CSRF-token, och
+  autentiseringen är stateless Basic-auth per anrop, inte en inloggad
+  session som CSRF-skyddet är till för.
+
 ## Kända fällor i det här projektet (redan lösta - undvik att återintroducera)
 
 - **Surefire vs. Failsafe**: enhetstester heter `*Test.java` (körs av
@@ -75,6 +89,12 @@ arkitektur och arbetsprocess.
   får sin fasta klocka från `CucumberSpringConfiguration.FastKlockaFörTester`,
   som med `@Primary` skuggar produktionens `Clock`-böna
   (`Clock.systemDefaultZone()` i `RoomBookingApplication`).
+- **`@WebMvcTest`-slice-tester ser inte `SecurityConfig` automatiskt.**
+  Utan `@Import(SecurityConfig.class)` slår Spring Boots egen
+  standardsäkerhet in istället - den kräver autentisering på *allt* bakom
+  ett slumpat genererat lösenord - och redan gröna kontrollertester börjar
+  plötsligt få 401. Se `BookingControllerTest`/`AdminControllerTest` för
+  mönstret; gäller varje ny `@WebMvcTest`-klass.
 
 ## Nästa steg
 
