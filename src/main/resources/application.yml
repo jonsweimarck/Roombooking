@@ -10,6 +10,12 @@ spring:
     url: jdbc:postgresql://${POSTGRESQL_ADDON_HOST:localhost}:${POSTGRESQL_ADDON_PORT:5432}/${POSTGRESQL_ADDON_DB:roombooking}
     username: ${POSTGRESQL_ADDON_USER:roombooking}
     password: ${POSTGRESQL_ADDON_PASSWORD:roombooking}
+    hikari:
+      # Clever Clouds DEV-nivå av Postgres har ett lågt anslutningstak.
+      # HikariCPs standard (10) räcker för att ensam överskrida det, och vid en
+      # omstart kan gammal och ny instans vara igång samtidigt en kort stund.
+      # Den här lilla appen behöver inte fler samtidiga anslutningar än så här.
+      maximum-pool-size: 3
   jpa:
     hibernate:
       ddl-auto: update

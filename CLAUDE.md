@@ -94,6 +94,13 @@ arkitektur och arbetsprocess.
 
 ## Kända fällor i det här projektet (redan lösta - undvik att återintroducera)
 
+- **HikariCPs standardpoolstorlek (10) är för stor för Clever Clouds
+  DEV-nivå av Postgres**, som har ett lågt anslutningstak - appen kraschar
+  vid uppstart med "FATAL: too many connections for role ...". Extra
+  lömskt vid omstart, då gammal och ny instans kan vara igång samtidigt en
+  kort stund och dubblar antalet anslutningar. Löst genom
+  `spring.datasource.hikari.maximum-pool-size: 3` i `application.yml` -
+  gott och väl för den här lilla appens behov.
 - **Surefire vs. Failsafe**: enhetstester heter `*Test.java` (körs av
   Surefire i `test`-fasen). Acceptanstester heter `*IT.java` (körs av
   Failsafe, kräver `mvn verify`). Fel namnmönster = testet körs aldrig, utan
