@@ -83,6 +83,14 @@ arkitektur och arbetsprocess.
   krävs för att Clever Cloud ska veta hur appen ska *köras*, inte bara
   byggas - utan den misslyckas deployen efter en lyckad `mvn package` med
   "goal is missing for deploying with maven".
+- **PostgreSQL-tillägget måste länkas till den specifika appen** ("Service
+  dependencies" i konsolen) - följer inte med automatiskt om appen skapas
+  om. Utan länkningen faller `application.yml`:s datasource tillbaka på
+  `localhost:5432` (det lokala docker-compose-värdet) och appen kraschar
+  vid uppstart med en JDBC-anslutningsfel som annars ser ut som ett
+  kodproblem.
+- Deployen är **verifierad fungerande** (2026-07-11): riktig Postgres,
+  GitHub-länkad autodeploy, `spring-boot:run` via `clevercloud/maven.json`.
 
 ## Kända fällor i det här projektet (redan lösta - undvik att återintroducera)
 

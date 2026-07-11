@@ -113,7 +113,10 @@ Datasource-konfigurationen (`application.yml`) läser
 `POSTGRESQL_ADDON_HOST`/`_PORT`/`_DB`/`_USER`/`_PASSWORD` med samma lokala
 värden som tidigare som fallback - de sätts automatiskt av Clever Cloud när
 PostgreSQL-tillägget länkas till appen, så ingen kodändring behövs vid
-själva deployen.
+själva deployen. Tillägget måste länkas till den **specifika** appen (under
+"Service dependencies" i konsolen) - annars faller datasourcen tillbaka på
+`localhost:5432` och appen kraschar vid uppstart. Hände här efter att appen
+skapats om (se historik) - tillägget följde inte med automatiskt.
 
 ## Nästa steg (öppna för nästa session)
 
@@ -123,5 +126,5 @@ själva deployen.
 - [x] Admin-sida för att lägga till rum (`administrera-rum.feature`, `RoomAdminService`, `/admin/rum`)
 - [x] Fler scenarier: bokning bakåt i tiden, avbokning (`avbokning.feature`) - öppettider behövs inte, rum är bokningsbara dygnet om
 - [x] Autentisering för admin-sidan (`/admin/rum` kräver HTTP Basic-inloggning, se `SecurityConfig`)
-- [ ] Deploy till Clever Cloud (se "Deploy till Clever Cloud" ovan) - `clevercloud/maven.json` på plats, appen GitHub-länkad; verifiera att en fullständig deploy faktiskt går igenom efter senaste ändringen
+- [x] Deploy till Clever Cloud (se "Deploy till Clever Cloud" ovan) - appen GitHub-länkad, verifierad fullständig deploy mot en riktig Postgres
 - [ ] Andra molnplattformen för att verifiera portabiliteten (t.ex. Kubernetes-manifest)
