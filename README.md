@@ -82,6 +82,39 @@ IMAGE_REGISTRY=localhost IMAGE_TAG=dev mvn compile jib:build -Djib.to.image=room
 (Kräver Docker-daemon eller registry-åtkomst beroende på Jib-mål; se Jib-dokumentationen
 för `jib:dockerBuild` om du bara vill bygga lokalt utan push.)
 
+## Deploy till Clever Cloud
+
+Vald molnplattform för det första konkreta deploy-steget (se Nästa steg).
+
+**Ingen Docker inblandad i den här deployen.** Clever Cloud har inget sätt
+att bara peka på en redan publicerad image (de bygger alltid själva från en
+`Dockerfile` vid push), vilket hade krävt registry-synlighet,
+inloggningsvariabler och en kapplöpning mellan CI:s image-publicering och
+Clever Clouds egen build. Istället används Clever Clouds inbyggda
+Java/Maven-stöd: de bygger direkt från källkoden med Maven och kör den,
+precis som en vanlig `mvn` + `java -jar`. Docker/Jib (`pom.xml`, CI:s
+`publish-image`-jobb) finns kvar bara för lokal körning och som grund för en
+eventuell andra molnplattform (se Nästa steg) - inte för den här deployen.
+
+Appen är **länkad direkt mot detta GitHub-repo** i Clever Clouds konsol
+(valt istället för att trigga deploy från CI): varje push till `master`
+bygger och deployar automatiskt, utan någon CLI eller några GitHub-secrets.
+Avvägning värd att känna till: det finns ingen testgrind före deploy -
+Clever Clouds build är helt oberoende av `mvn verify` i
+`.github/workflows/ci.yml`, så en trasig commit kan i teorin deployas även
+om CI:s egna tester skulle fallera.
+
+`clevercloud/maven.json` talar om för Clever Cloud hur appen ska startas
+(`spring-boot:run`) - annars vet den bara hur den ska bygga jaren, inte
+köra den, och deployen misslyckas med "goal is missing for deploying with
+maven".
+
+Datasource-konfigurationen (`application.yml`) läser
+`POSTGRESQL_ADDON_HOST`/`_PORT`/`_DB`/`_USER`/`_PASSWORD` med samma lokala
+värden som tidigare som fallback - de sätts automatiskt av Clever Cloud när
+PostgreSQL-tillägget länkas till appen, så ingen kodändring behövs vid
+själva deployen.
+
 ## Nästa steg (öppna för nästa session)
 
 - [x] Postgres-adapter för `BookingRepository`, testad med Testcontainers
@@ -90,5 +123,5 @@ för `jib:dockerBuild` om du bara vill bygga lokalt utan push.)
 - [x] Admin-sida för att lägga till rum (`administrera-rum.feature`, `RoomAdminService`, `/admin/rum`)
 - [x] Fler scenarier: bokning bakåt i tiden, avbokning (`avbokning.feature`) - öppettider behövs inte, rum är bokningsbara dygnet om
 - [x] Autentisering för admin-sidan (`/admin/rum` kräver HTTP Basic-inloggning, se `SecurityConfig`)
-- [ ] Konkret deploy-steg i CI mot första molnplattformen (förslag: Fly.io - enklast att komma igång med)
+- [ ] Deploy till Clever Cloud (se "Deploy till Clever Cloud" ovan) - `clevercloud/maven.json` på plats, appen GitHub-länkad; verifiera att en fullständig deploy faktiskt går igenom efter senaste ändringen
 - [ ] Andra molnplattformen för att verifiera portabiliteten (t.ex. Kubernetes-manifest)

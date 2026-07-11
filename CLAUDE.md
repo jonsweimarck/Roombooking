@@ -59,6 +59,31 @@ arkitektur och arbetsprocess.
   autentiseringen är stateless Basic-auth per anrop, inte en inloggad
   session som CSRF-skyddet är till för.
 
+## Deploy
+
+- **Molnplattform: Clever Cloud** (valt framför Fly.io). Se README:s "Deploy
+  till Clever Cloud" för detaljer och återstående steg.
+- **Ingen Docker för den här deployen** - medvetet valt bort. Clever Cloud
+  bygger alltid själv från en `Dockerfile` vid `git push` (går inte att bara
+  peka på en redan publicerad image), vilket hade krävt registry-synlighet,
+  inloggningsvariabler och hantering av en kapplöpning mellan CI:s
+  image-publicering och Clever Clouds egen build - för många kopplingar
+  utanför koden för vad det är värt. Använder istället Clever Clouds
+  inbyggda Java/Maven-stöd (bygger direkt från källkoden). Jib/Docker
+  (`pom.xml`, CI:s `publish-image`-jobb) finns kvar för lokal körning och en
+  eventuell andra molnplattform, inte för Clever Cloud-deployen.
+- **Appen är länkad direkt mot GitHub-repot i Clever Clouds konsol** - inte
+  triggad från CI. Det gick inte att länka GitHub i efterhand på en app som
+  redan skapats som "Brand new app" (git-push-baserad); det valet görs vid
+  appskapandet. `.github/workflows/ci.yml` har därför inget `deploy`-jobb -
+  Clever Cloud bygger och deployar helt oberoende vid varje push till
+  `master`. Medveten avvägning: ingen testgrind före deploy, till skillnad
+  från ett CI-triggat upplägg.
+- `clevercloud/maven.json` (`{"deploy": {"goal": "spring-boot:run"}}`)
+  krävs för att Clever Cloud ska veta hur appen ska *köras*, inte bara
+  byggas - utan den misslyckas deployen efter en lyckad `mvn package` med
+  "goal is missing for deploying with maven".
+
 ## Kända fällor i det här projektet (redan lösta - undvik att återintroducera)
 
 - **Surefire vs. Failsafe**: enhetstester heter `*Test.java` (körs av

@@ -2,9 +2,9 @@ name: CI/CD
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 jobs:
   build-and-test:
@@ -32,7 +32,7 @@ jobs:
 
   publish-image:
     needs: build-and-test
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -51,20 +51,16 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       # Jib bygger och pushar en OCI-image direkt från Maven - ingen Dockerfile behövs.
-      # Samma image kan sedan köras på valfri molnplattform som stödjer containrar.
+      # Används för lokal Docker-körning och som grund för en eventuell andra
+      # molnplattform (se README) - inte för deployen till Clever Cloud, som
+      # bygger direkt från källkoden med sitt eget Maven-stöd, se nedan.
       - name: Bygg och publicera OCI-image
         env:
           IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
           IMAGE_TAG: ${{ github.sha }}
         run: mvn -B compile jib:build
 
-  # Deploy-steget är plattformsspecifikt och lämnas som en tydlig utbyggnadspunkt.
-  # Nästa lärsteg: byt ut detta jobb mot t.ex. flyctl, render-cli eller kubectl
-  # beroende på vilken molnplattform vi testar för det aktuella delprojektet.
-  deploy:
-    needs: publish-image
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Platshållare för deployment
-        run: echo "Deploy-steg läggs till per målplattform (Fly.io, Render, Kubernetes, ...)"
+  # Inget deploy-jobb här: Clever Cloud-appen är länkad direkt mot detta
+  # GitHub-repo (se README) och bygger + deployar automatiskt vid varje push
+  # till master, oberoende av den här workflowen. Se clevercloud/maven.json
+  # för hur Clever Cloud vet hur appen ska startas.
