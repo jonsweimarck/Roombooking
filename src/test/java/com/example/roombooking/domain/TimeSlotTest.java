@@ -53,4 +53,33 @@ class TimeSlotTest {
             assertThat(fredag.overlaps(mandag)).isFalse();
         }
     }
+
+    @Nested
+    @DisplayName("när det jämförs med nuvarande veckodag och tid")
+    class NarDetJamforsMedNuvarandeVeckodagOchTid {
+
+        @Test
+        @DisplayName("ska den ha passerat om det är samma veckodag och starttiden redan är förbi")
+        void skaHaPasseratOmSammaVeckodagOchStarttidenRedanArForbi() {
+            var slot = new TimeSlot(DayOfWeek.WEDNESDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
+
+            assertThat(slot.hasPassed(DayOfWeek.WEDNESDAY, LocalTime.of(14, 0))).isTrue();
+        }
+
+        @Test
+        @DisplayName("ska inte ha passerat om det är samma veckodag men starttiden inte är förbi än")
+        void skaInteHaPasseratOmSammaVeckodagMenStarttidenInteArForbiAn() {
+            var slot = new TimeSlot(DayOfWeek.WEDNESDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
+
+            assertThat(slot.hasPassed(DayOfWeek.WEDNESDAY, LocalTime.of(9, 0))).isFalse();
+        }
+
+        @Test
+        @DisplayName("ska inte ha passerat om veckodagen redan varit denna vecka - avser nästa vecka")
+        void skaInteHaPasseratOmVeckodagenRedanVaritDennaVecka() {
+            var mandag = new TimeSlot(DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
+
+            assertThat(mandag.hasPassed(DayOfWeek.WEDNESDAY, LocalTime.of(14, 0))).isFalse();
+        }
+    }
 }

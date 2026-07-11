@@ -2,6 +2,7 @@ package com.example.roombooking.infrastructure;
 
 import com.example.roombooking.application.BookingRepository;
 import com.example.roombooking.domain.Booking;
+import com.example.roombooking.domain.Booking.BookingId;
 import com.example.roombooking.domain.Room.RoomId;
 import com.example.roombooking.domain.TimeSlot;
 import org.springframework.stereotype.Repository;
@@ -27,6 +28,11 @@ public class JpaBookingRepository implements BookingRepository {
     @Override
     public void save(Booking booking) {
         jpaRepository.save(toEntity(booking));
+    }
+
+    @Override
+    public void deleteById(BookingId id) {
+        jpaRepository.deleteById(id.value());
     }
 
     /** Används av acceptanstesterna för att nollställa tillstånd mellan scenarier. */

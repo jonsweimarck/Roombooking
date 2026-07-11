@@ -2,6 +2,7 @@ package com.example.roombooking.infrastructure;
 
 import com.example.roombooking.application.BookingRepository;
 import com.example.roombooking.domain.Booking;
+import com.example.roombooking.domain.Booking.BookingId;
 import com.example.roombooking.domain.Room.RoomId;
 
 import java.util.List;
@@ -26,6 +27,11 @@ public class InMemoryBookingRepository implements BookingRepository {
     @Override
     public void save(Booking booking) {
         bookings.add(booking);
+    }
+
+    @Override
+    public void deleteById(BookingId id) {
+        bookings.removeIf(booking -> booking.id().equals(id));
     }
 
     /** Används av acceptanstesterna för att nollställa tillstånd mellan scenarier. */

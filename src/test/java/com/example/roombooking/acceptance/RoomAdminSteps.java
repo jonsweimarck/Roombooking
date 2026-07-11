@@ -12,8 +12,11 @@ import io.cucumber.java.sv.Givet;
 import io.cucumber.java.sv.När;
 import io.cucumber.java.sv.Så;
 
+import java.time.Clock;
 import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,7 +34,10 @@ public class RoomAdminSteps {
     public void setUp() {
         roomRepository = new InMemoryRoomRepository();
         roomAdminService = new RoomAdminService(roomRepository);
-        bookingService = new BookingService(roomRepository, new InMemoryBookingRepository());
+        // Måndag 00:00 som fast "nu" - ligger före fredagsbokningen nedan, så
+        // "bokning bakåt i tiden"-kontrollen i BookingService inte stör detta test.
+        var nu = Clock.fixed(Instant.parse("2024-01-01T00:00:00Z"), ZoneOffset.UTC);
+        bookingService = new BookingService(roomRepository, new InMemoryBookingRepository(), nu);
     }
 
     @Givet("att rummet {string} inte finns sedan tidigare")

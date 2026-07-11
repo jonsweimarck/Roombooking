@@ -9,13 +9,20 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.time.Clock;
 import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("BookingService")
 class BookingServiceTest {
+
+    /** Onsdag 12:00 - ett fast "nu" som ligger mellan de tider testerna bokar. */
+    private static final Clock ONSDAG_KLOCKAN_TOLV =
+            Clock.fixed(Instant.parse("2024-01-03T12:00:00Z"), ZoneOffset.UTC);
 
     private BookingService bookingService;
     private InMemoryBookingRepository bookingRepository;
@@ -23,7 +30,7 @@ class BookingServiceTest {
     @BeforeEach
     void setUp() {
         bookingRepository = new InMemoryBookingRepository();
-        bookingService = new BookingService(new InMemoryRoomRepository(), bookingRepository);
+        bookingService = new BookingService(new InMemoryRoomRepository(), bookingRepository, ONSDAG_KLOCKAN_TOLV);
     }
 
     @Nested
@@ -97,6 +104,32 @@ class BookingServiceTest {
             var result = bookingService.book(new RoomId("OKÄNT"), timeSlot, "Alva");
 
             assertThat(result).isInstanceOf(BookingResult.Rejected.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("när tiden redan har passerat idag")
+    class NarTidenRedanHarPasseratIdag {
+
+        @Test
+        @DisplayName("ska bokningen avslås med anledningen \"Kan inte boka bakåt i tiden\"")
+        void skaBokningenAvslasMedAnledningenKanInteBokaBakatITiden() {
+            var tidigareIdag = new TimeSlot(DayOfWeek.WEDNESDAY, LocalTime.of(9, 0), LocalTime.of(10, 0));
+
+            var result = bookingService.book(new RoomId("R204"), tidigareIdag, "Alva");
+
+            assertThat(result).isInstanceOf(BookingResult.Rejected.class);
+            assertThat(((BookingResult.Rejected) result).reason()).isEqualTo("Kan inte boka bakåt i tiden");
+        }
+
+        @Test
+        @DisplayName("ska en tidigare veckodag ändå bekräftas - avser nästa vecka")
+        void skaEnTidigareVeckodagAndaBekraftas() {
+            var mandag = new TimeSlot(DayOfWeek.MONDAY, LocalTime.of(9, 0), LocalTime.of(10, 0));
+
+            var result = bookingService.book(new RoomId("R204"), mandag, "Alva");
+
+            assertThat(result).isInstanceOf(BookingResult.Confirmed.class);
         }
     }
 }

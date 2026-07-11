@@ -12,8 +12,13 @@ import io.cucumber.java.sv.Och;
 import io.cucumber.java.sv.När;
 import io.cucumber.java.sv.Så;
 
+import java.time.Clock;
 import java.time.DayOfWeek;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.Locale;
 import java.util.Map;
 
@@ -37,6 +42,9 @@ public class BookingSteps {
             "söndag", DayOfWeek.SUNDAY
     );
 
+    /** En godtycklig måndag, bara använd som referenspunkt för att bygga en fast klocka. */
+    private static final LocalDate REFERENSMÅNDAG = LocalDate.of(2024, 1, 1);
+
     private InMemoryRoomRepository roomRepository;
     private InMemoryBookingRepository bookingRepository;
     private BookingService bookingService;
@@ -46,12 +54,19 @@ public class BookingSteps {
     public void setUp() {
         roomRepository = new InMemoryRoomRepository();
         bookingRepository = new InMemoryBookingRepository();
-        bookingService = new BookingService(roomRepository, bookingRepository);
+        // Måndag 00:00 som standard "nu" - ligger före alla scenarier som bokar senare i veckan,
+        // så "bokning bakåt i tiden"-kontrollen inte råkar avslå dem.
+        bookingService = new BookingService(roomRepository, bookingRepository, klockaFrån(DayOfWeek.MONDAY, LocalTime.MIDNIGHT));
     }
 
     @Givet("att rum {string} är ledigt")
     public void attRumÄrLedigt(String rumId) {
         // Rummet finns redan i InMemoryRoomRepository och har inga bokningar - inget att göra.
+    }
+
+    @Givet("att klockan är {tid} på {word}")
+    public void attKlockanÄr(LocalTime tid, String veckodag) {
+        bookingService = new BookingService(roomRepository, bookingRepository, klockaFrån(dagFrån(veckodag), tid));
     }
 
     @Givet("att rum {string} redan är bokat mellan {tid} och {tid} på {word}")
@@ -105,5 +120,11 @@ public class BookingSteps {
             throw new IllegalArgumentException("Okänd veckodag i specifikationen: " + veckodag);
         }
         return dag;
+    }
+
+    private static Clock klockaFrån(DayOfWeek dag, LocalTime tid) {
+        LocalDate datum = REFERENSMÅNDAG.plusDays(dag.getValue() - 1L);
+        Instant instant = LocalDateTime.of(datum, tid).toInstant(ZoneOffset.UTC);
+        return Clock.fixed(instant, ZoneOffset.UTC);
     }
 }
