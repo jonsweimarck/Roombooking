@@ -100,7 +100,12 @@ arkitektur och arbetsprocess.
   lömskt vid omstart, då gammal och ny instans kan vara igång samtidigt en
   kort stund och dubblar antalet anslutningar. Löst genom
   `spring.datasource.hikari.maximum-pool-size: 3` i `application.yml` -
-  gott och väl för den här lilla appens behov.
+  gott och väl för den här lilla appens behov. Efter flera misslyckade
+  omstarter räckte inte poolminskningen ensam - övergivna anslutningar från
+  de tidigare krascherna låg kvar och fyllde upp taket ändå. Löste sig av
+  sig själv efter någon minut (databasen städar bort inaktiva anslutningar
+  automatiskt); om det inte händer, kolla om PostgreSQL-tillägget (inte
+  appen) har en egen restart-knapp i konsolen.
 - **Surefire vs. Failsafe**: enhetstester heter `*Test.java` (körs av
   Surefire i `test`-fasen). Acceptanstester heter `*IT.java` (körs av
   Failsafe, kräver `mvn verify`). Fel namnmönster = testet körs aldrig, utan
