@@ -22,6 +22,28 @@ arkitektur och arbetsprocess.
 - Domänlagret (`domain/`) har inga ramverksberoenden.
 - Frontend ska vara så enkel som möjligt - htmx + server-renderad HTML
   (Thymeleaf), inte en SPA-stack, om inget annat uttryckligen motiveras.
+- Webblagret testas med `@WebMvcTest` + `MockMvc` mot ett `@MockBean`-stubbat
+  servicelager (se `BookingControllerTest`/`AdminControllerTest`) - det som
+  verifieras är den faktiskt renderade HTML:en (formulärfält, htmx-attribut,
+  resultatfragment), inte bara `Model`-attribut. Affärslogiken testas separat
+  i `*ServiceTest`/feature-scenarierna.
+
+## Domänmodell - viktiga vägval
+
+- **`TimeSlot` har inget kalenderdatum** - bara `DayOfWeek` + `LocalTime`.
+  Bokningar är återkommande veckoslots, inte bokningar på ett specifikt
+  datum. Det är ett medvetet val (litet lärprojekt, ingen anledning till
+  kalenderkomplexitet) - inför inte ett riktigt datum utan att stämma av det
+  först, eftersom det påverkar `TimeSlot`, `Booking` och alla Gherkin-steg
+  som skriver veckodag istället för datum.
+- **"Bakåt i tiden" är därför relativt till innevarande vecka**, inte ett
+  absolut datum: `TimeSlot.hasPassed(nu, nuTid)` avslår bara en bokning om
+  det är *samma* veckodag och starttiden redan är förbi. En tidigare
+  veckodag (t.ex. boka måndag när det är onsdag) avser nästa förekomst,
+  nästa vecka, och räknas inte som passerad. Se `bokning.feature` för de
+  scenarier som pinnar fast det.
+- Rum har inga öppettider - de är bokningsbara dygnet om. Beslutat
+  medvetet, inget scenario för det ska läggas till.
 
 ## Kända fällor i det här projektet (redan lösta - undvik att återintroducera)
 
@@ -40,10 +62,21 @@ arkitektur och arbetsprocess.
   `mockito.version` stödjer. Löst genom att låsa `mockito.version` och
   `net.bytebuddy:byte-buddy(-agent)` till nyare versioner i `pom.xml` - annars
   fungerar inga Mockito-mockar av konkreta klasser alls i webbslice-tester
-  (`@WebMvcTest`).
+  (`@WebMvcTest`). CI kör Java 21 där detta inte är trasigt - felet dyker
+  bara upp lokalt om `JAVA_HOME` pekar på en nyare JDK än vad byte-buddy
+  hunnit stödja.
+- **`BookingService.book(...)` avslår bokningar bakåt i tiden relativt en
+  injicerad `Clock`** (se ovan under Domänmodell). Alla ställen som
+  konstruerar `BookingService` direkt i tester (`BookingSteps`,
+  `RoomAdminSteps`, `AvbokningSteps`, `BookingServiceTest`) måste därför
+  använda en **fast** `Clock.fixed(...)`, aldrig systemklockan - annars blir
+  testerna flakiga beroende på vilken veckodag/tid de faktiskt körs.
+  Cucumber-scenarier som går via Spring-kontexten (persistensscenarierna)
+  får sin fasta klocka från `CucumberSpringConfiguration.FastKlockaFörTester`,
+  som med `@Primary` skuggar produktionens `Clock`-böna
+  (`Clock.systemDefaultZone()` i `RoomBookingApplication`).
 
-## Nästa steg (se även README)
+## Nästa steg
 
-- Fler scenarier: öppettider, bokning bakåt i tiden, avbokning
-- Postgres-adapter för repositoryn, testad med Testcontainers (inte mockad)
-- Konkret deploy-steg i `.github/workflows/ci.yml` mot första molnplattformen
+Se README.md:s "Nästa steg"-sektion - hålls bara på ett ställe för att
+undvika att de driver isär (vilket redan hänt en gång).
