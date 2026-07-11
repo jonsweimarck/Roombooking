@@ -8,11 +8,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -21,10 +24,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Testar bara webblagret: RoomAdminService är stubbad, så det som verifieras
  * är den faktiskt renderade HTML:en (formulärfält, htmx-attribut,
- * resultatfragmentet) - inte affärslogiken, som redan täcks av
- * RoomAdminServiceTest och administrera-rum.feature.
+ * resultatfragmentet) och åtkomstskyddet - inte affärslogiken, som redan
+ * täcks av RoomAdminServiceTest och administrera-rum.feature.
  */
 @WebMvcTest(AdminController.class)
+@Import(SecurityConfig.class)
 class AdminControllerTest {
 
     @Autowired
@@ -34,13 +38,34 @@ class AdminControllerTest {
     private RoomAdminService roomAdminService;
 
     @Nested
+    @DisplayName("utan inloggning")
+    class UtanInloggning {
+
+        @Test
+        @DisplayName("ska GET nekas")
+        void skaGetNekas() throws Exception {
+            mockMvc.perform(get("/admin/rum"))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("ska POST nekas och rummet aldrig skickas till RoomAdminService")
+        void skaPostNekas() throws Exception {
+            mockMvc.perform(post("/admin/rum").param("roomId", "R205"))
+                    .andExpect(status().isUnauthorized());
+
+            verify(roomAdminService, never()).addRoom(new RoomId("R205"));
+        }
+    }
+
+    @Nested
     @DisplayName("admin-formuläret")
     class AdminFormuläret {
 
         @Test
         @DisplayName("ska visa fält för rum-id och posta via htmx")
         void skaVisaFältOchPostaViaHtmx() throws Exception {
-            mockMvc.perform(get("/admin/rum"))
+            mockMvc.perform(get("/admin/rum").with(httpBasic("admin", "admin")))
                     .andExpect(status().isOk())
                     .andExpect(content().string(allOf(
                             containsString("hx-post=\"/admin/rum\""),
@@ -56,7 +81,9 @@ class AdminControllerTest {
         @Test
         @DisplayName("ska rummet skickas till RoomAdminService och resultatfragmentet visa bekräftelsen")
         void skaSkickasTillServiceOchVisaBekräftelsen() throws Exception {
-            mockMvc.perform(post("/admin/rum").param("roomId", "R205"))
+            mockMvc.perform(post("/admin/rum")
+                            .with(httpBasic("admin", "admin"))
+                            .param("roomId", "R205"))
                     .andExpect(status().isOk())
                     .andExpect(content().string(containsString("Rummet R205 har lagts till")));
 
