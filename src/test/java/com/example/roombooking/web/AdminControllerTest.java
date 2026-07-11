@@ -2,35 +2,65 @@ package com.example.roombooking.web;
 
 import com.example.roombooking.application.RoomAdminService;
 import com.example.roombooking.domain.Room.RoomId;
-import com.example.roombooking.infrastructure.InMemoryRoomRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.ui.ExtendedModelMap;
-import org.springframework.ui.Model;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.web.servlet.MockMvc;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@DisplayName("AdminController")
+/**
+ * Testar bara webblagret: RoomAdminService är stubbad, så det som verifieras
+ * är den faktiskt renderade HTML:en (formulärfält, htmx-attribut,
+ * resultatfragmentet) - inte affärslogiken, som redan täcks av
+ * RoomAdminServiceTest och administrera-rum.feature.
+ */
+@WebMvcTest(AdminController.class)
 class AdminControllerTest {
 
-    private AdminController controller;
-    private InMemoryRoomRepository roomRepository;
-    private Model model;
+    @Autowired
+    private MockMvc mockMvc;
 
-    @BeforeEach
-    void setUp() {
-        roomRepository = new InMemoryRoomRepository();
-        controller = new AdminController(new RoomAdminService(roomRepository));
-        model = new ExtendedModelMap();
+    @MockBean
+    private RoomAdminService roomAdminService;
+
+    @Nested
+    @DisplayName("admin-formuläret")
+    class AdminFormuläret {
+
+        @Test
+        @DisplayName("ska visa fält för rum-id och posta via htmx")
+        void skaVisaFältOchPostaViaHtmx() throws Exception {
+            mockMvc.perform(get("/admin/rum"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(allOf(
+                            containsString("hx-post=\"/admin/rum\""),
+                            containsString("name=\"roomId\"")
+                    )));
+        }
     }
 
-    @Test
-    @DisplayName("ska lägga till rummet i repositoryt och visa en bekräftelse")
-    void skaLäggaTillRummetIRepositorytOchVisaEnBekräftelse() {
-        controller.läggTillRum("R205", model);
+    @Nested
+    @DisplayName("när ett rum läggs till")
+    class NärEttRumLäggsTill {
 
-        assertThat(roomRepository.findById(new RoomId("R205"))).isPresent();
-        assertThat(model.getAttribute("message")).isEqualTo("Rummet R205 har lagts till");
+        @Test
+        @DisplayName("ska rummet skickas till RoomAdminService och resultatfragmentet visa bekräftelsen")
+        void skaSkickasTillServiceOchVisaBekräftelsen() throws Exception {
+            mockMvc.perform(post("/admin/rum").param("roomId", "R205"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(containsString("Rummet R205 har lagts till")));
+
+            verify(roomAdminService).addRoom(new RoomId("R205"));
+        }
     }
 }

@@ -1,67 +1,116 @@
 package com.example.roombooking.web;
 
+import com.example.roombooking.application.BookingResult;
 import com.example.roombooking.application.BookingService;
-import com.example.roombooking.infrastructure.InMemoryBookingRepository;
-import com.example.roombooking.infrastructure.InMemoryRoomRepository;
-import org.junit.jupiter.api.BeforeEach;
+import com.example.roombooking.domain.Booking;
+import com.example.roombooking.domain.Room.RoomId;
+import com.example.roombooking.domain.TimeSlot;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.ui.ExtendedModelMap;
-import org.springframework.ui.Model;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@DisplayName("BookingController")
+/**
+ * Testar bara webblagret: BookingService är stubbad, så det som verifieras
+ * är den faktiskt renderade HTML:en (formulärfält, htmx-attribut,
+ * resultatfragmentet) - inte affärslogiken, som redan täcks av
+ * BookingServiceTest och bokning.feature.
+ */
+@WebMvcTest(BookingController.class)
 class BookingControllerTest {
 
-    private BookingController controller;
-    private Model model;
+    @Autowired
+    private MockMvc mockMvc;
 
-    @BeforeEach
-    void setUp() {
-        var bookingService = new BookingService(new InMemoryRoomRepository(), new InMemoryBookingRepository());
-        controller = new BookingController(bookingService);
-        model = new ExtendedModelMap();
-    }
-
-    private void postaBokning(String rumId, LocalTime start, LocalTime slut, String namn) {
-        controller.createBooking(rumId, DayOfWeek.FRIDAY, start, slut, namn, model);
-    }
+    @MockBean
+    private BookingService bookingService;
 
     @Nested
-    @DisplayName("när rummet är ledigt")
-    class NarRummetArLedigt {
+    @DisplayName("bokningsformuläret")
+    class Bokningsformuläret {
 
         @Test
-        @DisplayName("ska modellen visa att bokningen lyckades")
-        void skaModellenVisaAttBokningenLyckades() {
-            postaBokning("R204", LocalTime.of(10, 0), LocalTime.of(11, 0), "Alva");
-
-            assertThat(model.getAttribute("success")).isEqualTo(true);
-            assertThat(model.getAttribute("message")).isEqualTo("Bokning bekräftad för rum R204");
+        @DisplayName("ska visa fält för rum, veckodag, tid och namn samt posta via htmx")
+        void skaVisaFältOchPostaViaHtmx() throws Exception {
+            mockMvc.perform(get("/"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(allOf(
+                            containsString("hx-post=\"/bookings\""),
+                            containsString("name=\"roomId\""),
+                            containsString("name=\"day\""),
+                            containsString("name=\"start\""),
+                            containsString("name=\"end\""),
+                            containsString("name=\"bookedBy\"")
+                    )));
         }
     }
 
     @Nested
-    @DisplayName("när rummet redan är bokat under en överlappande tid")
-    class NarRummetRedanArBokat {
-
-        @BeforeEach
-        void bokaRummetForst() {
-            postaBokning("R204", LocalTime.of(10, 0), LocalTime.of(11, 0), "Alva");
-        }
+    @DisplayName("när bokningen bekräftas")
+    class NärBokningenBekräftas {
 
         @Test
-        @DisplayName("ska modellen visa anledningen till avslaget")
-        void skaModellenVisaAnledningenTillAvslaget() {
-            postaBokning("R204", LocalTime.of(10, 30), LocalTime.of(11, 30), "Björn");
+        @DisplayName("ska resultatfragmentet visa bekräftelsen")
+        void skaResultatfragmentetVisaBekräftelsen() throws Exception {
+            var timeSlot = new TimeSlot(DayOfWeek.FRIDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
+            var booking = Booking.create(new RoomId("R204"), timeSlot, "Alva");
+            when(bookingService.book(eq(new RoomId("R204")), any(), eq("Alva")))
+                    .thenReturn(new BookingResult.Confirmed(booking));
 
-            assertThat(model.getAttribute("success")).isEqualTo(false);
-            assertThat(model.getAttribute("message")).isEqualTo("Bokning avslogs: Överlappande bokning");
+            mockMvc.perform(post("/bookings")
+                            .param("roomId", "R204")
+                            .param("day", "FRIDAY")
+                            .param("start", "10:00")
+                            .param("end", "11:00")
+                            .param("bookedBy", "Alva"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(allOf(
+                            containsString("Bokning bekräftad för rum R204"),
+                            containsString("#e6f4ea")
+                    )));
+        }
+    }
+
+    @Nested
+    @DisplayName("när bokningen avslås")
+    class NärBokningenAvslås {
+
+        @Test
+        @DisplayName("ska resultatfragmentet visa anledningen")
+        void skaResultatfragmentetVisaAnledningen() throws Exception {
+            when(bookingService.book(eq(new RoomId("R204")), any(), eq("Björn")))
+                    .thenReturn(new BookingResult.Rejected("Överlappande bokning"));
+
+            mockMvc.perform(post("/bookings")
+                            .param("roomId", "R204")
+                            .param("day", "FRIDAY")
+                            .param("start", "10:30")
+                            .param("end", "11:30")
+                            .param("bookedBy", "Björn"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(allOf(
+                            containsString("Bokning avslogs: Överlappande bokning"),
+                            containsString("#fce8e6")
+                    )));
+
+            verify(bookingService).book(eq(new RoomId("R204")), any(), eq("Björn"));
         }
     }
 }

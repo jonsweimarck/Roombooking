@@ -34,6 +34,13 @@ arkitektur och arbetsprocess.
   "expected #FeatureLine"-fel.
 - `junit-platform-suite-engine` måste vara ett explicit beroende, inte bara
   `junit-platform-suite` (annars kan `@Suite`-motorn saknas vid discovery).
+- **Mockito + nya JDK-versioner**: `@MockBean`/`Mockito.mock(...)` på en
+  konkret klass kan misslyckas med "Byte Buddy could not instrument all
+  classes" om den lokala JDK:n är nyare än vad Spring Boot-BOM:ens
+  `mockito.version` stödjer. Löst genom att låsa `mockito.version` och
+  `net.bytebuddy:byte-buddy(-agent)` till nyare versioner i `pom.xml` - annars
+  fungerar inga Mockito-mockar av konkreta klasser alls i webbslice-tester
+  (`@WebMvcTest`).
 
 ## Nästa steg (se även README)
 
