@@ -85,6 +85,8 @@ för `jib:dockerBuild` om du bara vill bygga lokalt utan push.)
 - [x] Postgres-adapter för `BookingRepository`, testad med Testcontainers
 - [x] Postgres-adapter för `RoomRepository`, testad med Testcontainers
 - [x] Ersätt in-memory-adaptrarna i produktionskonfigurationen
+- [x] Admin-sida för att lägga till rum (`administrera-rum.feature`, `RoomAdminService`, `/admin/rum`)
 - [ ] Fler scenarier: öppettider, bokning bakåt i tiden, avbokning
+- [ ] Autentisering för admin-sidan - `/admin/rum` är just nu helt öppen, vem som helst kan lägga till rum
 - [ ] Konkret deploy-steg i CI mot första molnplattformen (förslag: Fly.io - enklast att komma igång med)
 - [ ] Andra molnplattformen för att verifiera portabiliteten (t.ex. Kubernetes-manifest)
